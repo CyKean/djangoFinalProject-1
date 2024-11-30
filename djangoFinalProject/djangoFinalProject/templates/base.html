@@ -1,0 +1,281 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}Welcome to AgriWise{% endblock %}</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        </style>
+        <style>
+            .bg-gradient {
+                background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            }
+
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            }
+
+            .hero-container {
+                background: rgba(255, 255, 255, 0.85);
+                -webkit-backdrop-filter: blur(10px);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 20px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            }
+
+            .logo-glow {
+                filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.3));
+            }
+
+            .bg-pattern {
+                background-color: #f8fafc;
+                background-image: 
+                    radial-gradient(at 40% 20%, rgba(34, 197, 94, 0.1) 0px, transparent 50%),
+                    radial-gradient(at 80% 0%, rgba(234, 179, 8, 0.1) 0px, transparent 50%),
+                    radial-gradient(at 0% 50%, rgba(34, 197, 94, 0.1) 0px, transparent 50%);
+            }
+
+            @keyframes moveLeft {
+                0% { transform: translateX(0); }
+                50% { transform: translateX(-30px); }
+                100% { transform: translateX(0); }
+            }
+
+            @keyframes moveRight {
+                0% { transform: translateX(0); }
+                50% { transform: translateX(30px); }
+                100% { transform: translateX(0); }
+            }
+
+            .vegetable-background {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+                z-index: 10;
+                padding: 2rem;
+                overflow: hidden;
+                pointer-events: none;
+            }
+
+            .vegetable-row {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+                padding: 1rem 0;
+                gap: 2rem;
+            }
+
+            .vegetable-icon {
+                flex: 0 0 auto;
+                opacity: 0.15;
+                filter: blur(1px);
+                animation-duration: 8s;
+                animation-timing-function: ease-in-out;
+                animation-iteration-count: infinite;
+                font-size: 2rem;
+                transition: all 0.3s ease;
+                cursor: pointer;
+                pointer-events: auto;
+                position: relative;
+                z-index: 20;
+            }
+
+            .vegetable-icon:hover {
+                opacity: 0.8;
+                filter: blur(0);
+                transform: scale(1.5);
+                animation-play-state: paused;
+            }
+
+            .vegetable-icon.text-orange-500:hover {
+                color: #f97316;
+                text-shadow: 0 0 15px rgba(249, 115, 22, 0.4);
+            }
+
+            .vegetable-icon.text-red-500:hover,
+            .vegetable-icon.text-red-600:hover {
+                color: #ef4444;
+                text-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            }
+
+            .vegetable-icon.text-green-500:hover,
+            .vegetable-icon.text-green-600:hover {
+                color: #22c55e;
+                text-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+            }
+
+            .vegetable-icon.text-yellow-400:hover {
+                color: #facc15;
+                text-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
+            }
+
+            .vegetable-row:nth-child(odd) .vegetable-icon {
+                animation-name: moveLeft;
+            }
+
+            .vegetable-row:nth-child(even) .vegetable-icon {
+                animation-name: moveRight;
+            }
+
+            .content-container {
+                position: relative;
+                z-index: 30;
+            }
+
+            .action-card {
+                transition: all 0.3s ease;
+                border-radius: 0.75rem;
+                overflow: hidden;
+                min-height: 90px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                padding: 1rem !important;
+                margin-bottom: 1rem;
+                width: 100%;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            .action-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            }
+
+            .action-card .icon {
+                font-size: 1.25rem;
+                margin-right: 1rem;
+                width: 2rem;
+                height: 2rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 0.5rem;
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+            .action-card.predict-crop {
+                background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+            }
+
+            .action-card.admin-portal {
+                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            }
+
+            .action-card h2 {
+                font-size: 1rem !important;
+                font-weight: 600;
+                margin-bottom: 0.25rem;
+                color: inherit;
+            }
+
+            .action-card p {
+                font-size: 0.875rem !important;
+                line-height: 1.3;
+                opacity: 0.9;
+            }
+
+            .action-card.predict-crop h2,
+            .action-card.predict-crop p,
+            .action-card.predict-crop .icon {
+                color: white;
+            }
+
+            .action-card.admin-portal h2,
+            .action-card.admin-portal p,
+            .action-card.admin-portal .icon {
+                color: #059669;  /* Changed from #1f2937 to a green color */
+            }
+        </style>
+    </head>
+    <body class="bg-pattern min-h-screen font-sans">
+        {% block content %}
+        <!-- Animated Background Icons -->
+        <div class="vegetable-background">
+            {% for row in "1234"|make_list %}
+            <div class="vegetable-row">
+                {% for i in "1234"|make_list %}
+                <i class="fas fa-carrot vegetable-icon text-orange-500"></i>
+                <i class="fas fa-apple-alt vegetable-icon text-red-500"></i>
+                <i class="fas fa-leaf vegetable-icon text-green-500"></i>
+                {% endfor %}
+            </div>
+            <div class="vegetable-row">
+                {% for i in "1234"|make_list %}
+                <i class="fas fa-seedling vegetable-icon text-green-600"></i>
+                <i class="fas fa-pepper-hot vegetable-icon text-red-600"></i>
+                <i class="fas fa-lemon vegetable-icon text-yellow-400"></i>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="content-container min-h-screen flex flex-col items-center justify-center p-6 relative space-y-6">
+            <!-- Logo and Welcome Text Container -->
+            <div class="hero-container max-w-lg w-full mx-auto p-8">
+                <div class="flex flex-col items-center text-center space-y-6">
+                    {% load static %}
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-green-400 rounded-full blur-2xl opacity-20"></div>
+                        <img src="{% static 'images/agri-wise-logo-tp.png' %}" alt="AgriWise Logo" class="w-32 h-32 relative z-10 logo-glow">
+                    </div>
+                    <div class="space-y-2">
+                        <h1 class="text-2xl font-bold text-gray-800 text-shadow">
+                            Welcome, <span class="text-green-600">Farmer!</span>
+                        </h1>
+                        <p class="text-sm text-gray-600 leading-relaxed max-w-md">
+                            Unlock the potential of your farm with our intelligent crop recommendations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Cards Section -->
+            <div class="flex flex-col space-y-4 w-full max-w-lg">
+                <a href="{% url 'prediction' %}" class="action-card predict-crop">
+                    <div class="flex items-center">
+                        <div class="icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <h2>Predict Crop</h2>
+                            <p>Get personalized crop recommendations based on your farm's unique conditions.</p>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'admin_dashboard' %}" class="action-card admin-portal">
+                    <div class="flex items-center">
+                        <div class="icon">
+                            <i class="fas fa-user-cog"></i>
+                        </div>
+                        <div>
+                            <h2>Admin Portal</h2>
+                            <p>Access advanced settings and manage your AgriWise account.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 via-yellow-400 to-green-400"></div>
+        {% endblock %}
+    </body>
+    </html>
+

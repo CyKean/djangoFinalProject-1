@@ -1,0 +1,516 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detailed Predictions Table{% endblock %}
+
+{% block content %}
+<style>
+    /* Custom scrollbar styles */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #22c55e;
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #15803d;
+    }
+
+    /* Table container height */
+    .table-container-height {
+        height: calc(100vh - 400px);
+    }
+
+    /* Additional styles for new features */
+    .search-filter-container {
+        background: rgba(255, 255, 255, 0.4);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+    }
+    
+    .export-button {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .export-button:hover {
+        transform: translateY(-1px);
+    }
+</style>
+
+<div class="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4" role="main" aria-label="Dashboard Content">
+    <div class="w-full max-w-7xl mx-auto">
+        <!-- Header Section -->
+        <div class="flex items-center justify-between mb-8">
+            <div class="space-y-4">
+                <div class="flex items-center gap-4">
+                    <!-- Home Button -->
+                    <a href="{% url 'home' %}" 
+                       class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-sm hover:bg-green-50 transition-colors duration-200"
+                       aria-label="Return to Home">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
+                    </a>
+                    <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-blue-600">
+                        Detailed Predictions Table
+                    </h1>
+                </div>
+                <div class="mt-6">
+                    <a href="{% url 'admin_dashboard' %}" 
+                       class="inline-flex items-center px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                       aria-label="View Detailed Predictions Table">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        View Dashboard
+                    </a>
+                </div>
+            </div>
+            <img src="{% static 'images/agri-wise-logo-tp.png' %}" alt="Agri-Wise Logo" class="h-20 w-20 object-contain"/>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8" role="region" aria-label="Soil Analysis Statistics">
+            <!-- Nitrogen Card -->
+            <div class="bg-green-50/80 backdrop-blur rounded-lg p-3 shadow-sm border border-green-100 transition-all duration-200 hover:border-green-400 hover:shadow-md hover:shadow-green-100" role="article" aria-labelledby="nitrogen-title">
+                <div class="flex items-center justify-between">
+                    <span class="text-green-600" aria-hidden="true">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                    </span>
+                    <span id="nitrogen-title" class="text-xs font-medium text-green-600">N</span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mt-2">{{ latest_reading.nitrogen|default:"0"|floatformat:2 }}</h3>
+                <p class="text-gray-600 text-xs">Nitrogen Level (mg/kg)</p>
+            </div>
+
+            <!-- Phosphorus Card -->
+            <div class="bg-blue-50/80 backdrop-blur rounded-lg p-3 shadow-sm border border-blue-100 transition-all duration-200 hover:border-blue-400 hover:shadow-md hover:shadow-blue-100" role="article" aria-labelledby="phosphorus-title">
+                <div class="flex items-center justify-between">
+                    <span class="text-blue-600" aria-hidden="true">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </span>
+                    <span id="phosphorus-title" class="text-xs font-medium text-blue-600">P</span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mt-2">{{ latest_reading.phosphorus|default:"0"|floatformat:2 }}</h3>
+                <p class="text-gray-600 text-xs">Phosphorus Level (mg/kg)</p>
+            </div>
+
+            <!-- Potassium Card -->
+            <div class="bg-purple-50/80 backdrop-blur rounded-lg p-3 shadow-sm border border-purple-100 transition-all duration-200 hover:border-purple-400 hover:shadow-md hover:shadow-purple-100" role="article" aria-labelledby="potassium-title">
+                <div class="flex items-center justify-between">
+                    <span class="text-purple-600" aria-hidden="true">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                    </span>
+                    <span id="potassium-title" class="text-xs font-medium text-purple-600">K</span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mt-2">{{ latest_reading.potassium|default:"0"|floatformat:2 }}</h3>
+                <p class="text-gray-600 text-xs">Potassium Level (mg/kg)</p>
+            </div>
+
+            <!-- pH Level Card -->
+            <div class="bg-yellow-50/80 backdrop-blur rounded-lg p-3 shadow-sm border border-yellow-100 transition-all duration-200 hover:border-yellow-400 hover:shadow-md hover:shadow-yellow-100" role="article" aria-labelledby="ph-title">
+                <div class="flex items-center justify-between">
+                    <span class="text-yellow-600" aria-hidden="true">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                        </svg>
+                    </span>
+                    <span id="ph-title" class="text-xs font-medium text-yellow-600">pH</span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mt-2">{{ latest_reading.soilpH|default:"0"|floatformat:2 }}</h3>
+                <p class="text-gray-600 text-xs">Soil pH Level</p>
+            </div>
+
+            <!-- Temperature Card -->
+            <div class="bg-red-50/80 backdrop-blur rounded-lg p-3 shadow-sm border border-red-100 transition-all duration-200 hover:border-red-400 hover:shadow-md hover:shadow-red-100" role="article" aria-labelledby="temperature-title">
+                <div class="flex items-center justify-between">
+                    <span class="text-red-600" aria-hidden="true">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </span>
+                    <span id="temperature-title" class="text-xs font-medium text-red-600">Temp</span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mt-2">{{ latest_reading.temperature|default:"0"|floatformat:2 }}</h3>
+                <p class="text-gray-600 text-xs">Temperature (°C)</p>
+            </div>
+
+            <!-- Humidity Card -->
+            <div class="bg-cyan-50/80 backdrop-blur rounded-lg p-3 shadow-sm border border-cyan-100 transition-all duration-200 hover:border-cyan-400 hover:shadow-md hover:shadow-cyan-100" role="article" aria-labelledby="humidity-title">
+                <div class="flex items-center justify-between">
+                    <span class="text-cyan-600" aria-hidden="true">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </span>
+                    <span id="humidity-title" class="text-xs font-medium text-cyan-600">RH</span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mt-2">{{ latest_reading.humidity|default:"0"|floatformat:2 }}</h3>
+                <p class="text-gray-600 text-xs">Humidity (%)</p>
+            </div>
+        </div>
+
+        <!-- Search, Filter, and Export Section -->
+        <div class="mb-6 search-filter-container rounded-xl p-4 border border-gray-200 shadow-sm bg-white/40 backdrop-blur">
+            <div class="flex flex-col md:flex-row gap-4 justify-between">
+                <!-- Enhanced Search Bar -->
+                <div class="flex-1 relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-gray-400 group-focus-within:text-green-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="searchInput"
+                        class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors bg-white/50"
+                        placeholder="Search measurements..."
+                    >
+                </div>
+
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-gray-400 group-focus-within:text-green-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                    </div>
+                    <select 
+                        id="dateFilter" 
+                        aria-label="Filter measurements by date range"
+                        title="Date range filter"
+                        class="pl-10 pr-8 py-2.5 rounded-lg border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors bg-white/50 appearance-none cursor-pointer min-w-[180px]"
+                    >
+                        <option value="">Filter by Range</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                </div>
+        
+                <!-- Sort Dropdown with Icon -->
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-gray-400 group-focus-within:text-green-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+                        </svg>
+                    </div>
+                    <select 
+                        id="sortBy" 
+                        aria-label="Sort measurements by selected criteria"
+                        title="Sort criteria"
+                        class="pl-10 pr-8 py-2.5 rounded-lg border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-colors bg-white/50 appearance-none cursor-pointer min-w-[180px]"
+                    >
+                        <option value="">Sort by</option>
+                        <option value="date-desc">Date (Newest)</option>
+                        <option value="date-asc">Date (Oldest)</option>
+                        <option value="nitrogen">Nitrogen Level</option>
+                        <option value="phosphorus">Phosphorus Level</option>
+                        <option value="potassium">Potassium Level</option>
+                        <option value="ph">pH Level</option>
+                        <option value="temperature">Temperature</option>
+                        <option value="humidity">Humidity</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Export Dropdown -->
+                <div class="relative">
+                    <button 
+                        id="exportDropdownButton" 
+                        class="inline-flex items-center px-4 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:ring-2 focus:ring-green-200 transition-colors gap-2"
+                        onclick="toggleExportDropdown()"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        Export
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div 
+                        id="exportDropdown" 
+                        class="hidden absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-50"
+                    >
+                        <div class="py-1">
+                            <button 
+                                onclick="exportData('pdf')" 
+                                class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 w-full"
+                            >
+                                <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                                Export as PDF
+                            </button>
+                            <button 
+                                onclick="exportData('csv')" 
+                                class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 w-full"
+                            >
+                                <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Export as CSV
+                            </button>
+                            <button 
+                                onclick="exportData('doc')" 
+                                class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 w-full"
+                            >
+                                <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Export as DOC
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scrollable Table Container -->
+        <div class="overflow-y-auto pr-4 table-container-height" role="region" aria-label="Soil Analysis Data">
+            <div class="bg-white/40 backdrop-blur rounded-xl p-4 shadow-sm border border-gray-200">
+                <h4 class="text-sm font-semibold text-gray-700 mb-4">Soil Analysis Measurements</h4>
+                <div class="overflow-x-auto">
+                    <table id="measurementsTable" class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-green-600 uppercase tracking-wider">Nitrogen (mg/kg)</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Phosphorus (mg/kg)</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-purple-600 uppercase tracking-wider">Potassium (mg/kg)</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-yellow-600 uppercase tracking-wider">pH Level</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-red-600 uppercase tracking-wider">Temperature (°C)</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-sky-600 uppercase tracking-wider">Humidity (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white/50 divide-y divide-gray-200">
+                            {% for measurement in measurements %}
+                            <tr class="hover:bg-gray-50/50 transition-colors duration-150">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ measurement.timestamp|date:"M d, Y H:i:s" }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ measurement.nitrogen|floatformat:2 }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ measurement.phosphorus|floatformat:2 }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ measurement.potassium|floatformat:2 }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ measurement.soilpH|floatformat:2 }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ measurement.temperature|floatformat:2 }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ measurement.humidity|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No measurements available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer with gradient bar -->
+<div class="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 via-yellow-400 to-green-400"></div>
+
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#measurementsTable tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Date filter functionality
+    document.getElementById('dateFilter').addEventListener('change', function(e) {
+        const filterValue = e.target.value;
+        const rows = document.querySelectorAll('#measurementsTable tbody tr');
+        const today = new Date();
+        
+        rows.forEach(row => {
+            const dateCell = row.querySelector('td:first-child');
+            const date = new Date(dateCell.textContent);
+            let show = true;
+
+            switch(filterValue) {
+                case 'today':
+                    show = date.toDateString() === today.toDateString();
+                    break;
+                case 'week':
+                    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    show = date >= weekAgo;
+                    break;
+                case 'month':
+                    show = date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+                    break;
+                case 'year':
+                    show = date.getFullYear() === today.getFullYear();
+                    break;
+            }
+
+            row.style.display = show ? '' : 'none';
+        });
+    });
+
+    // Sort functionality
+    document.getElementById('sortBy').addEventListener('change', function(e) {
+        const sortValue = e.target.value;
+        const tbody = document.querySelector('#measurementsTable tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        rows.sort((a, b) => {
+            let aValue, bValue;
+            switch(sortValue) {
+                case 'date-desc':
+                case 'date-asc':
+                    aValue = new Date(a.cells[0].textContent);
+                    bValue = new Date(b.cells[0].textContent);
+                    break;
+                case 'nitrogen':
+                    aValue = parseFloat(a.cells[1].textContent);
+                    bValue = parseFloat(b.cells[1].textContent);
+                    break;
+                case 'phosphorus':
+                    aValue = parseFloat(a.cells[2].textContent);
+                    bValue = parseFloat(b.cells[2].textContent);
+                    break;
+                case 'potassium':
+                    aValue = parseFloat(a.cells[3].textContent);
+                    bValue = parseFloat(b.cells[3].textContent);
+                    break;
+                case 'ph':
+                    aValue = parseFloat(a.cells[4].textContent);
+                    bValue = parseFloat(b.cells[4].textContent);
+                    break;
+                case 'temperature':
+                    aValue = parseFloat(a.cells[5].textContent);
+                    bValue = parseFloat(b.cells[5].textContent);
+                    break;
+                case 'humidity':
+                    aValue = parseFloat(a.cells[6].textContent);
+                    bValue = parseFloat(b.cells[6].textContent);
+                    break;
+            }
+
+            if (sortValue === 'date-asc') {
+                return aValue - bValue;
+            } else {
+                return bValue - aValue;
+            }
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+    });
+
+    // Export functionality
+    function toggleExportDropdown() {
+        const dropdown = document.getElementById('exportDropdown');
+        dropdown.classList.toggle('hidden');
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function closeDropdown(e) {
+            if (!e.target.closest('#exportDropdownButton') && !e.target.closest('#exportDropdown')) {
+                dropdown.classList.add('hidden');
+                document.removeEventListener('click', closeDropdown);
+            }
+        });
+    }
+
+    function exportData(format) {
+        // Get the table data
+        const table = document.querySelector('#measurementsTable');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        
+        // Convert table data to the desired format
+        switch(format) {
+            case 'pdf':
+                // Create form data for the PDF export
+                const formData = new FormData();
+                formData.append('format', 'pdf');
+                
+                // Send POST request to Django view
+                fetch('{% url "export_measurements" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'soil_measurements.pdf';
+                    a.click();
+                });
+                break;
+                
+            case 'csv':
+                // Create CSV content
+                const csvContent = rows.map(row => {
+                    return Array.from(row.querySelectorAll('th,td'))
+                        .map(cell => cell.textContent)
+                        .join(',');
+                }).join('\n');
+                
+                // Download CSV file
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'soil_measurements.csv';
+                a.click();
+                break;
+                
+            case 'doc':
+                // Create form data for the DOC export
+                const docFormData = new FormData();
+                docFormData.append('format', 'doc');
+                
+                // Send POST request to Django view
+                fetch('{% url "export_measurements" %}', {
+                    method: 'POST',
+                    body: docFormData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'soil_measurements.doc';
+                    a.click();
+                });
+                break;
+        }
+    }
+</script>
+{% endblock %}

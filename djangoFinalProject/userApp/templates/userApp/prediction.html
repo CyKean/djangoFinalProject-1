@@ -1,0 +1,672 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Crop Prediction - AgriWise{% endblock %}
+
+{% block content %}
+<style>
+    @keyframes moveLeft {
+        0% { transform: translateX(0); }
+        50% { transform: translateX(-30px); }
+        100% { transform: translateX(0); }
+    }
+
+    @keyframes moveRight {
+        0% { transform: translateX(0); }
+        50% { transform: translateX(30px); }
+        100% { transform: translateX(0); }
+    }
+
+    .vegetable-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        z-index: 0;
+        padding: 1rem;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .vegetable-row {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.5rem 0;
+        gap: 1rem;
+    }
+
+    .vegetable-icon {
+        flex: 0 0 auto;
+        opacity: 0.15;
+        filter: blur(1px);
+        animation-duration: 8s;
+        animation-timing-function: ease-in-out;
+        animation-iteration-count: infinite;
+        font-size: 1.5rem;
+    }
+
+    .vegetable-row:nth-child(odd) .vegetable-icon {
+        animation-name: moveLeft;
+    }
+
+    .vegetable-row:nth-child(even) .vegetable-icon {
+        animation-name: moveRight;
+    }
+
+    .home-button {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 9999px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+        z-index: 50;
+    }
+
+    .home-button:hover {
+        background-color: #ffffff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .content-container {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        z-index: 1;
+    }
+
+    .hero-container {
+        max-width: 40rem;
+        width: 100%;
+        margin: 2rem auto;
+        padding: 1.5rem;
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 1.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .logo-container {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, #22c55e20, #16a34a20);
+        border-radius: 25px;
+        padding: 1.25rem;
+        transform: rotate(-5deg);
+        transition: transform 0.3s ease;
+    }
+
+    .logo-container:hover {
+        transform: rotate(0deg);
+    }
+
+    .logo-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .page-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+    }
+
+    .subtitle {
+        font-size: 0.875rem;
+        color: #666;
+        text-align: center;
+        margin-bottom: 2rem;
+        line-height: 1.5;
+    }
+
+    .form-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    @media (min-width: 640px) {
+        .form-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    .input-group {
+        background: transparent;
+        padding: 0.25rem 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .input-group:hover {
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .input-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.35rem;
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+
+    .input-field {
+        width: 100%;
+        padding: 0.5rem 0.85rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+        background: white;
+        margin-bottom: 0.35rem;
+    }
+
+    .input-field::placeholder {
+        font-size: 0.75rem;
+        color: #9CA3AF;
+    }
+
+    .input-field:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        outline: none;
+    }
+
+    .submit-button {
+        width: 100%;
+        padding: 1rem;
+        margin-top: 2rem;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: white;
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .submit-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);
+    }
+
+    .submit-button:active {
+        transform: translateY(0);
+    }
+
+    .footer-line {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: linear-gradient(to right, #22c55e, #fbbf24, #22c55e);
+        z-index: 50;
+    }
+
+    /* Modal Styles */
+    .modal-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
+        z-index: 100;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal-backdrop.show {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-container {
+        position: relative;
+        width: 90%;
+        max-width: 550px;
+        margin: auto;
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        box-shadow: 
+            0 10px 25px rgba(0, 0, 0, 0.1),
+            0 20px 48px rgba(34, 197, 94, 0.1),
+            0 1px 4px rgba(34, 197, 94, 0.1);
+    }
+
+    .modal-backdrop.show .modal-container {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .modal-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #16a34a;
+        margin-bottom: 0.25rem;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        border: none;
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+        background: rgba(34, 197, 94, 0.2);
+        transform: rotate(90deg);
+    }
+
+    .result-card {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(22, 163, 74, 0.05));
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(34, 197, 94, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .result-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
+    }
+
+    .result-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #16a34a;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .result-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #059669;
+        margin: 0.75rem 0;
+        text-align: center;
+    }
+
+    .result-description {
+        font-size: 0.85rem;
+        color: #4b5563;
+        line-height: 1.4;
+    }
+
+    .result-icon {
+        width: 1.75rem;
+        height: 1.75rem;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #16a34a;
+        font-size: 0.9rem;
+    }
+
+    /* Animation for results */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .result-card {
+        animation: slideIn 0.3s ease forwards;
+        opacity: 0;
+    }
+
+    .result-card:nth-child(1) { animation-delay: 0.1s; }
+    .result-card:nth-child(2) { animation-delay: 0.2s; }
+    .result-card:nth-child(3) { animation-delay: 0.3s; }
+
+    .results-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-top: 1rem;
+    }
+
+    .list-disc {
+        list-style-type: disc;
+    }
+
+    .pl-4 {
+        padding-left: 1rem;
+    }
+
+    .mt-3 {
+        margin-top: 0.75rem;
+    }
+
+    /* Confetti container */
+    #confetti-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1500;
+    }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* {
+    font-family: 'Poppins', sans-serif;
+}
+</style>
+
+<div class="vegetable-background">
+    {% for row in "123"|make_list %}
+    <div class="vegetable-row">
+        {% for i in "1234"|make_list %}
+        <i class="fas fa-carrot vegetable-icon text-orange-500"></i>
+        <i class="fas fa-apple-alt vegetable-icon text-red-500"></i>
+        <i class="fas fa-leaf vegetable-icon text-green-500"></i>
+        {% endfor %}
+    </div>
+    <div class="vegetable-row">
+        {% for i in "1234"|make_list %}
+        <i class="fas fa-seedling vegetable-icon text-green-600"></i>
+        <i class="fas fa-pepper-hot vegetable-icon text-red-600"></i>
+        <i class="fas fa-lemon vegetable-icon text-yellow-400"></i>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+
+<a href="{% url 'home' %}" class="home-button">
+    <i class="fas fa-home text-green-600 text-lg"></i>
+    <span class="sr-only">Return to Home</span>
+</a>
+
+<div class="content-container">
+    <div class="hero-container">
+        <div class="logo-container">
+            <img src="{% static 'images/agri-wise-logo-tp.png' %}" alt="AgriWise Logo" class="logo-image">
+        </div>
+        <h1 class="page-title text-2xl">Crop Prediction</h1>
+        <p class="subtitle text-sm">Enter your soil parameters to get personalized crop recommendations for your farm.</p>
+
+        <form method="post" class="space-y-4" onsubmit="showResults(event)">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="nitrogen" class="input-label">
+                        <i class="fas fa-flask text-green-600"></i>
+                        Nitrogen (N) Level
+                    </label>
+                    <input type="number" step="0.01" name="nitrogen" id="nitrogen" required
+                        placeholder="Enter nitrogen value (mg/kg)"
+                        value="{{ latest_soil_data.nitrogen }}"
+                        readonly
+                        class="input-field py-2 bg-gray-50 cursor-not-allowed">
+                </div>
+        
+                <div class="input-group">
+                    <label for="phosphorus" class="input-label">
+                        <i class="fas fa-vial text-green-600"></i>
+                        Phosphorus (P) Level
+                    </label>
+                    <input type="number" step="0.01" name="phosphorus" id="phosphorus" required
+                        placeholder="Enter phosphorus value (mg/kg)"
+                        value="{{ latest_soil_data.phosphorus }}"
+                        readonly
+                        class="input-field py-2 bg-gray-50 cursor-not-allowed">
+                </div>
+        
+                <div class="input-group">
+                    <label for="potassium" class="input-label">
+                        <i class="fas fa-atom text-green-600"></i>
+                        Potassium (K) Level
+                    </label>
+                    <input type="number" step="0.01" name="potassium" id="potassium" required
+                        placeholder="Enter potassium value (mg/kg)"
+                        value="{{ latest_soil_data.potassium }}"
+                        readonly
+                        class="input-field py-2 bg-gray-50 cursor-not-allowed">
+                </div>
+        
+                <div class="input-group">
+                    <label for="ph" class="input-label">
+                        <i class="fas fa-tint text-green-600"></i>
+                        Soil pH Level
+                    </label>
+                    <input type="number" step="0.01" name="ph" id="ph" required
+                        placeholder="Enter soil pH (0-14)"
+                        value="{{ latest_soil_data.soilpH }}"
+                        readonly
+                        class="input-field py-2 bg-gray-50 cursor-not-allowed">
+                </div>
+        
+                <div class="input-group">
+                    <label for="temperature" class="input-label">
+                        <i class="fas fa-thermometer-half text-green-600"></i>
+                        Temperature
+                    </label>
+                    <input type="number" step="0.01" name="temperature" id="temperature" required
+                        placeholder="Enter temperature (°C)"
+                        value="{{ latest_soil_data.temperature }}"
+                        readonly
+                        class="input-field py-2 bg-gray-50 cursor-not-allowed">
+                </div>
+        
+                <div class="input-group">
+                    <label for="humidity" class="input-label">
+                        <i class="fas fa-water text-green-600"></i>
+                        Humidity
+                    </label>
+                    <input type="number" step="0.01" name="humidity" id="humidity" required
+                        placeholder="Enter humidity (%)"
+                        value="{{ latest_soil_data.humidity }}"
+                        readonly
+                        class="input-field py-2 bg-gray-50 cursor-not-allowed">
+                </div>
+            </div>
+        
+            <button type="submit" class="submit-button mt-4">
+                <i class="fas fa-seedling"></i>
+                Get Crop Recommendations
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="resultsModal" class="modal-backdrop">
+    <div class="modal-container">
+        <button class="modal-close" onclick="closeModal()">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="modal-header">
+            <h2 class="modal-title">Crop Recommendations</h2>
+            <p class="text-gray-600">Based on your soil parameters</p>
+        </div>
+        <div class="modal-content">
+            <div class="result-card">
+                <div class="result-title">
+                    <div class="result-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    Recommended Crop
+                </div>
+                <div class="result-value">Rice</div>
+                <p class="result-description">
+                    Based on your soil composition, Rice would be the optimal crop choice for your farm.
+                    This crop thrives in similar soil conditions and has shown excellent yield potential.
+                </p>
+            </div>
+
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-title">
+                        <div class="result-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        Success Rate
+                    </div>
+                    <div class="result-value">92%</div>
+                    <p class="result-description text-xs text-gray-600">
+                        Predicted success rate based on soil analysis
+                    </p>
+                </div>
+
+                <div class="result-card">
+                    <div class="result-title">
+                        <div class="result-icon">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        Alternative Options
+                    </div>
+                    <div class="result-description mt-3">
+                        <ul class="list-disc pl-4 space-y-1 text-xs text-gray-600">
+                            <li>Wheat (85% success rate)</li>
+                            <li>Maize (80% success rate)</li>
+                            <li>Soybeans (75% success rate)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 via-yellow-400 to-green-400"></div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+<script>
+    function showResults(event) {
+        event.preventDefault();
+        const modal = document.getElementById('resultsModal');
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        triggerConfetti();
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('resultsModal');
+        modal.classList.remove('show');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('resultsModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeModal();
+        }
+    });
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    function triggerConfetti() {
+        const duration = 4 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { 
+            startVelocity: 45, 
+            spread: 360, 
+            ticks: 100, 
+            zIndex: 1500,
+            shapes: ['square', 'circle'],
+            colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#800080']
+        };
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        const interval = setInterval(function() {
+            const timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            const particleCount = 75 * (timeLeft / duration);
+            
+            // Burst from multiple points
+            confetti(Object.assign({}, defaults, { 
+                particleCount: particleCount / 2,
+                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+                gravity: 1.2
+            }));
+            confetti(Object.assign({}, defaults, { 
+                particleCount: particleCount / 2,
+                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+                gravity: 1.2
+            }));
+        }, 250);
+    }
+</script>
+
+{% endblock %}
+
