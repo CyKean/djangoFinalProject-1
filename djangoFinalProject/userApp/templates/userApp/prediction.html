@@ -233,7 +233,6 @@
         z-index: 50;
     }
 
-    /* Modal Styles */
     .modal-backdrop {
         display: none;
         position: fixed;
@@ -362,7 +361,6 @@
         font-size: 0.9rem;
     }
 
-    /* Animation for results */
     @keyframes slideIn {
         from {
             opacity: 0;
@@ -402,7 +400,6 @@
         margin-top: 0.75rem;
     }
 
-    /* Confetti container */
     #confetti-canvas {
         position: fixed;
         top: 0;
@@ -452,8 +449,9 @@
         <h1 class="page-title text-2xl">Crop Prediction</h1>
         <p class="subtitle text-sm">Enter your soil parameters to get personalized crop recommendations for your farm.</p>
 
-        <form method="post" class="space-y-4" onsubmit="showResults(event)">
+        <form method="POST" class="space-y-4" id="predictionForm">
             {% csrf_token %}
+            <input type="hidden" name="soil_data_id" value="{{ latest_soil_data.id}}">
             <div class="form-grid">
                 <div class="input-group">
                     <label for="nitrogen" class="input-label">
@@ -568,12 +566,11 @@
                         </div>
                         Success Rate
                     </div>
-                    <div class="result-value">92%</div>
+                    <div class="result-value success-rate">92%</div>
                     <p class="result-description text-xs text-gray-600">
                         Predicted success rate based on soil analysis
                     </p>
                 </div>
-
                 <div class="result-card">
                     <div class="result-title">
                         <div class="result-icon">
@@ -581,18 +578,18 @@
                         </div>
                         Alternative Options
                     </div>
-                    <div class="result-description mt-3">
+                    <div class="result-description mt-3 alternative-crops">
                         <ul class="list-disc pl-4 space-y-1 text-xs text-gray-600">
-                            <li>Wheat (85% success rate)</li>
-                            <li>Maize (80% success rate)</li>
-                            <li>Soybeans (75% success rate)</li>
                         </ul>
                     </div>
                 </div>
             </div>
+           
         </div>
     </div>
 </div>
+
+
 
 <div class="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 via-yellow-400 to-green-400"></div>
 
@@ -600,13 +597,57 @@
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 <script>
-    function showResults(event) {
-        event.preventDefault();
-        const modal = document.getElementById('resultsModal');
-        modal.classList.add('show');
-        document.body.style.overflow = 'hidden';
-        triggerConfetti();
-    }
+  function showResults(event, data) {
+    event.preventDefault();
+    const modal = document.getElementById('resultsModal');
+    
+    const topCrops = data.top_crops; // Assuming the server returns top 3 recommended crops
+    
+    // Function to capitalize the first letter of a string
+    const capitalizeFirstLetter = (str) => {
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
+    
+    // Capitalize the crop name before displaying it
+    document.querySelector('.modal-content .result-value').textContent = capitalizeFirstLetter(topCrops[0].crop_name);
+    document.querySelector('.modal-content .result-description').textContent = 
+        `This crop has a ${topCrops[0].success_rate} chance of success based on your soil composition.`;
+
+    document.querySelector('.modal-content .success-rate').textContent = topCrops[0].success_rate;
+
+    let alternativesList = '';
+    topCrops.slice(1).forEach(crop => {
+        alternativesList += `<li>${capitalizeFirstLetter(crop.crop_name)} (${crop.success_rate})</li>`;
+    });
+
+    document.querySelector('.alternative-crops').innerHTML = alternativesList;
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';  // Disable page scrolling
+
+    triggerConfetti();
+}
+
+
+document.getElementById('predictionForm').addEventListener('submit', function(event) {
+    event.preventDefault();  // Prevent form from submitting normally
+    
+    var formData = new FormData(this);
+    
+    fetch("{% url 'predict_crop' %}", {
+        method: "POST",
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);  // Log the received data for debugging
+        showResults(event, data);  // Pass the prediction result to showResults
+    })
+    .catch(error => {
+        console.error("Error:", error);  // Handle any errors
+    });
+});
+
 
     function closeModal() {
         const modal = document.getElementById('resultsModal');
@@ -614,14 +655,12 @@
         document.body.style.overflow = 'auto';
     }
 
-    // Close modal when clicking outside
-    document.getElementById('resultsModal').addEventListener('click', function(event) {
+     document.getElementById('resultsModal').addEventListener('click', function(event) {
         if (event.target === this) {
             closeModal();
         }
     });
 
-    // Close modal on escape key
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
             closeModal();
@@ -653,7 +692,6 @@
 
             const particleCount = 75 * (timeLeft / duration);
             
-            // Burst from multiple points
             confetti(Object.assign({}, defaults, { 
                 particleCount: particleCount / 2,
                 origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
@@ -666,6 +704,8 @@
             }));
         }, 250);
     }
+
+
 </script>
 
 {% endblock %}

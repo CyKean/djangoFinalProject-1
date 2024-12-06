@@ -305,6 +305,8 @@
                                 <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-yellow-600 uppercase tracking-wider">pH Level</th>
                                 <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-red-600 uppercase tracking-wider">Temperature (°C)</th>
                                 <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-sky-600 uppercase tracking-wider">Humidity (%)</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-sky-600 uppercase tracking-wider">Predicted Crop (highest success rate)</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-sky-600 uppercase tracking-wider">Date Predicted</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white/50 divide-y divide-gray-200">
@@ -317,10 +319,34 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ measurement.soilpH|floatformat:2 }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ measurement.temperature|floatformat:2 }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ measurement.humidity|floatformat:2 }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {% for prediction in prediction_data %}
+                                        {% if prediction.soil_data_id == measurement.id %}
+                                            {% if prediction.highest_rate_crop %}
+                                                {{ prediction.highest_rate_crop.crop_name }} ({{ prediction.highest_rate_crop.success_rate }})
+                                            {% else %}
+                                                No prediction available
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {% for prediction in prediction_data %}
+                                        {% if prediction.soil_data_id == measurement.id %}
+                                            {% if prediction.prediction_datetime %}
+                                                {{ prediction.prediction_datetime|date:"M d, Y H:i:s" }}
+                                            {% else %}
+                                                No prediction date available
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No measurements available</td>
+                                <td colspan="9" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No measurements available</td>
                             </tr>
                             {% endfor %}
                         </tbody>

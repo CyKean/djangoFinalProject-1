@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from .models import SoilData
+from .models import Predicted
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from reportlab.pdfgen import canvas
@@ -20,17 +21,63 @@ def admin_dashboard(request):
     
     return render(request, 'adminApp/dashboard.html', context)
 
+# def prediction_table(request):
+#     try:
+#         # Fetch all soil data ordered by timestamp (most recent first)
+#         soil_data = SoilData.objects.all().order_by('-timestamp')
+        
+#         # Get the latest reading for the stats cards
+#         latest_reading = SoilData.objects.latest('timestamp')
+        
+#         context = {
+#             'measurements': soil_data,
+#             'latest_reading': latest_reading,
+#         }
+        
+#         return render(request, 'adminApp/prediction_table.html', context)
+        
+#     except Exception as e:
+#         print(f"Error fetching soil data: {str(e)}")
+#         context = {
+#             'measurements': [],
+#             'latest_reading': None,
+#             'error_message': 'Error fetching soil data'
+#         }
+#         return render(request, 'adminApp/prediction_table.html', context)
+
 def prediction_table(request):
     try:
         # Fetch all soil data ordered by timestamp (most recent first)
         soil_data = SoilData.objects.all().order_by('-timestamp')
         
-        # Get the latest reading for the stats cards
-        latest_reading = SoilData.objects.latest('timestamp')
+        # Initialize a list to hold the highest-rated crop data for each soil entry
+        prediction_data = []
+
+        for measurement in soil_data:
+            # Get the predicted crop entry for the current soil data
+            predicted_crop_entry = Predicted.objects.filter(soil_data_id=measurement.id).first()
+            
+            if predicted_crop_entry and predicted_crop_entry.predicted_crops:
+                # Extract the list of predicted crops
+                predicted_crops = predicted_crop_entry.predicted_crops
+                
+                # Find the crop with the highest success rate
+                highest_rate_crop = max(
+                    predicted_crops,
+                    key=lambda crop: float(crop['success_rate'].strip('%'))
+                )
+                
+                # Add the relevant data to the prediction_data list
+                prediction_data.append({
+                    'soil_data_id': measurement.id,
+                    'highest_rate_crop': highest_rate_crop,
+                    'prediction_datetime': predicted_crop_entry.prediction_datetime,
+                })
         
         context = {
             'measurements': soil_data,
-            'latest_reading': latest_reading,
+            'latest_reading': soil_data.first(),  # Assuming latest_reading is the first entry in the list
+            'prediction_data': prediction_data,   # Pass the collected prediction data
         }
         
         return render(request, 'adminApp/prediction_table.html', context)
@@ -40,9 +87,11 @@ def prediction_table(request):
         context = {
             'measurements': [],
             'latest_reading': None,
+            'prediction_data': [],
             'error_message': 'Error fetching soil data'
         }
         return render(request, 'adminApp/prediction_table.html', context)
+
 
 def export_measurements(request):
     if request.method == 'POST':
